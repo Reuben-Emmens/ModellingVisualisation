@@ -1,5 +1,6 @@
 package checkpoint1;
 
+import java.awt.Color;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.Scanner;
@@ -11,7 +12,8 @@ public class Ising {
 	public static double J = 0;
 	public static final double kb = 1.0; // m^2 kg s^-2 K^-1
 	public static int[][] grid = new int[L][L];
-
+	
+	
 	public static void main(String[] args) throws FileNotFoundException {
 
 		String input = "input";
@@ -25,19 +27,14 @@ public class Ising {
 		// Initialise grid with spin values
 		initialiseGrid();
 
-		int n = 0;
-		while (n < 1000) {
+		Visualization vis = new Visualization(L, L);
+		
 
-			glauberUpdate();
+		
+		while (true) {
 
-			for (int i = 0; i < grid.length; i++) {
-				System.out.println("\n");
-				for (int j = 0; j < grid.length; j++) {
-					System.out.print("  " + grid[i][j]);
-				}
-			}
-			System.out.println("\n");
-			n++;
+			kawasakiUpdate();
+			visualize(vis, grid, L, L);	
 		}
 
 	}
@@ -122,25 +119,32 @@ public class Ising {
 	public static void kawasakiUpdate() {
 
 		for (int i = 0; i < L * L; i++) {
-			// Choose a random grid point
+			// Choose two random grid points
 			int i1 = (int) (Math.random() * L);
 			int j1 = (int) (Math.random() * L);
 
 			int i2 = (int) (Math.random() * L);
 			int j2 = (int) (Math.random() * L);
 
+			// Skip if you pick the same grid point
 			if (i1 == i2 && j1 == j2)
 				continue;
 
+			// Skip if both spins are the same
 			if (grid[i1][j1] == grid[i2][j2])
 				continue;
 
-			// Calculate the energy difference cause by flipping the spin state
+			// Calculate the energy difference caused by flipping both spin state
 			double deltaE = localEnergy(i1, j1, true)
 					- localEnergy(i1, j1, false)
 					+ localEnergy(i2, j2, true)
 					- localEnergy(i2, j2, false);
 
+			// Make a correction if sites are neighbours
+			if (Math.abs(i1 - i2) == 1 ||Math.abs(j1 - j2) == 1){
+				deltaE += 4;
+			}
+			
 			double r = Math.random();
 
 			boolean test = r <= Math.min(1.0,
@@ -151,5 +155,11 @@ public class Ising {
 				grid[i2][j2] *= -1;
 			}
 		}
+	}
+	
+	static void visualize(Visualization vis, int[][] grid, int W, int H) {
+		for (int col = 0; col < W; col++) for (int row = 0; row < H; row++) vis.set(col, row, grid[col][row] == 1 ? Color.BLACK : Color.white);
+
+		vis.draw();
 	}
 }
